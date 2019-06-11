@@ -1,33 +1,42 @@
 from mpmath import mp
 import numpy as np
+import functools
 mp.dps = 400 # use precision of 00 decimal places throughtout, should be -log(gamma)*n + 64 ish, this lets us go as small as 10^-5
 return_dtype = np.float
 
+@functools.lru_cache(maxsize=1024)
 def y(gamma):
     return mp.sqrt(- mp.powm1(mp.mpmathify(gamma), 2))
 
-def big_xi(n, y, cancel_keff=False):
+@functools.lru_cache(maxsize=2*1024)
+def keff_factor(y, cancel_keff=False):
     if cancel_keff:
-        keff_factor = mp.mpf(1)
+        return mp.mpf(1)
     else:
-        keff_factor = (2 - mp.powm1(y, 2))
+        return (2 - mp.powm1(y, 2))
+
+@functools.lru_cache(maxsize=1024)
+def sqrt_minus_over_plus_factor(y):
+    return mp.sqrt(-mp.powm1(y, 1)/(1+y))
+
+@functools.lru_cache(maxsize=128)
+def neg_tothe_n(n):
+    return mp.power(-1, n)
+
+def big_xi(n, y, cancel_keff=False):
     poly_part = 3 + 3*n*y + (3*(n*n-1))*mp.power(y,2) + (2*n*(n*n - 1))*mp.power(y,3)
-    return mp.power(-1, n)*keff_factor/(mp.mpf(12)*mp.power(y, 5)) * mp.sqrt(mp.power((1-y)/(1+y), n)) * poly_part
+    return neg_tothe_n(n)*keff_factor(y, cancel_keff=cancel_keff)/(mp.mpf(12)*mp.power(y, 5)) * mp.power(sqrt_minus_over_plus_factor(y), n) * poly_part
 
 def small_xi(n, y, cancel_keff=False):
-    if cancel_keff:
-        keff_factor = mp.mpf(1)
-    else:
-        keff_factor =(2 - mp.powm1(y, 2))
-    return mp.power(-1, n)*keff_factor*(1 + n*y)/(mp.mpf(2)*mp.power(y, 3)) * mp.sqrt(mp.power((1-y)/(1+y), n))
+    return neg_tothe_n(n)*keff_factor(y, cancel_keff=cancel_keff)*(1 + n*y)/(mp.mpf(2)*mp.power(y, 3)) * (mp.power(sqrt_minus_over_plus_factor(y), n))
 
 def chi(n, y):
     if (n == 0):
         return mp.mpf(1)
     elif (n == 1):
-        return 2*mp.sqrt(-mp.powm1(y, 2))/(2 - mp.powm1(y, 2))
+        return 2*mp.sqrt(-mp.powm1(y, 2))/keff_factor(y, cancel_keff=False)
     elif (n == 2):
-        return -mp.powm1(y, 2)/(2*(2 - mod.powm1(y, 2)))
+        return -mp.powm1(y, 2)/(2*keff_factor(y, cancel_keff=False))
     else:
         return 0
 
