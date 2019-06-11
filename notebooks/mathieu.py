@@ -16,7 +16,7 @@ import scipy.linalg as LA
 
 ## Clean up docstrings, give actual form of series solution.
 ## NOTE A0's have extra sqrt(2) weighting!
-def mathieu_a_even_sys(n, q):
+def a_even_sys(n, q):
     """Gives even-order, even-parity pi-periodic solutions to Mathieu's equation with parameter q
     
     $\left[ \frac{d^2}{dV^2} - 2 q \cos(2 v) \right] V = -a V$ 
@@ -40,7 +40,7 @@ def mathieu_a_even_sys(n, q):
     evecs[0] /= np.sqrt(2)
     return evals, evecs
 
-def mathieu_a_odd_sys(n, q):
+def a_odd_sys(n, q):
     M = (np.diag(np.square(2*np.arange(n) + 1))
             + np.diag(q * np.ones(n-1), k=-1)
             + np.diag(q * np.ones(n-1), k=1)
@@ -48,7 +48,7 @@ def mathieu_a_odd_sys(n, q):
     M[0, 0] += q
     return LA.eigh(M)
 
-def mathieu_b_even_sys(n, q):
+def b_even_sys(n, q):
     """Gives even-order, odd-parity pi-periodic solutions to Mathieu's equation with parameter q
     
     $\left[ \frac{d^2}{dV^2} - 2 q \cos(2 v) \right] V = -a V$ 
@@ -67,7 +67,7 @@ def mathieu_b_even_sys(n, q):
         )
     return LA.eigh(M)
 
-def mathieu_b_odd_sys(n, q):
+def b_odd_sys(n, q):
     M = (np.diag(np.square(2*np.arange(n) + 1))
             + np.diag(q * np.ones(n-1), k=-1)
             + np.diag(q * np.ones(n-1), k=1)
