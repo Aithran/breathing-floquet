@@ -7,6 +7,9 @@ activate
 # Symlink to activate script for jupyter version
 activate-jupyter
 
+# Notebook versions of files
+*.ipynb
+
 ###############################################################################
 # Python.gitignore template from GitHub                                       #
 # Retrieved 2019-06-10 17:07                                                  #
