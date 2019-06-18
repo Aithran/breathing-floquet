@@ -27,12 +27,19 @@ def neg_tothe_n(n):
 def one_m_ysq(y):
     return (-mp.powm1(y, 2))
 
+@functools.lru_cache(maxsize=1024)
+def crit_drive_freq(y, trap_freq):
+    return return_dtype(mp.sqrt(2)*y/mp.sqrt(one_m_ysq(y)))*trap_freq
+
 def big_xi(n, y, cancel_keff=False):
     poly_part = 3 + 3*n*y + (3*(n*n-1))*mp.power(y,2) + (2*n*(n*n - 1))*mp.power(y,3)
     return neg_tothe_n(n)*keff_factor(y, cancel_keff=cancel_keff)/(mp.mpf(12)*mp.power(y, 5)) * mp.power(sqrt_minus_over_plus_factor(y), n) * poly_part
 
 def small_xi(n, y, cancel_keff=False):
     return neg_tothe_n(n)*keff_factor(y, cancel_keff=cancel_keff)*(1 + n*y)/(mp.mpf(2)*mp.power(y, 3)) * (mp.power(sqrt_minus_over_plus_factor(y), n))
+
+def crit_xi(n, y, cancel_keff=False):
+    return neg_tothe_n(n)*n*keff_factor(y, cancel_keff=cancel_keff)*mp.power(sqrt_minus_over_plus_factor(y), n)*(y+n*(3+2*n*y))/(6*y*one_m_ysq(y))
 
 def chi(n, y):
     if (n == 0):
@@ -63,6 +70,10 @@ def n_big_xis(n_count, y, cancel_keff=False):
 
 def n_small_xis(n_count, y, cancel_keff=False):
     xi_list = [small_xi(n, y, cancel_keff=cancel_keff) for n in mp.arange(n_count+1)]
+    return np.array(xi_list, dtype=return_dtype)
+
+def n_crit_xis(n_count, y, cancel_keff=False):
+    xi_list = [crit_xi(n, y, cancel_keff=cancel_keff) for n in mp.arange(n_count+1)]
     return np.array(xi_list, dtype=return_dtype)
 
 def n_both_xis(n_max, y, cancel_keff=False):
