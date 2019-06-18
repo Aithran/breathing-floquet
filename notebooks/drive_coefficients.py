@@ -13,7 +13,7 @@ def keff_factor(y, cancel_keff=False):
     if cancel_keff:
         return mp.mpf(1)
     else:
-        return (2 - mp.powm1(y, 2))
+        return (2 + one_m_ysq(y))
 
 @functools.lru_cache(maxsize=1024)
 def sqrt_minus_over_plus_factor(y):
@@ -22,6 +22,10 @@ def sqrt_minus_over_plus_factor(y):
 @functools.lru_cache(maxsize=128)
 def neg_tothe_n(n):
     return mp.power(-1, n)
+
+@functools.lru_cache(maxsize=1024)
+def one_m_ysq(y):
+    return (-mp.powm1(y, 2))
 
 def big_xi(n, y, cancel_keff=False):
     poly_part = 3 + 3*n*y + (3*(n*n-1))*mp.power(y,2) + (2*n*(n*n - 1))*mp.power(y,3)
