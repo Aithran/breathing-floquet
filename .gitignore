@@ -10,6 +10,9 @@ activate-jupyter
 # Notebook versions of files
 *.ipynb
 
+# Ignore data/ dir
+**/data
+
 ###############################################################################
 # Python.gitignore template from GitHub                                       #
 # Retrieved 2019-06-10 17:07                                                  #
