@@ -39,7 +39,7 @@ def small_xi(n, y, cancel_keff=False):
     return neg_tothe_n(n)*keff_factor(y, cancel_keff=cancel_keff)*(1 + n*y)/(mp.mpf(2)*mp.power(y, 3)) * (mp.power(sqrt_minus_over_plus_factor(y), n))
 
 def crit_xi(n, y, cancel_keff=False):
-    return neg_tothe_n(n)*n*keff_factor(y, cancel_keff=cancel_keff)*mp.power(sqrt_minus_over_plus_factor(y), n)*(y+n*(3+2*n*y))/(6*y*one_m_ysq(y))
+    return -neg_tothe_n(n)*n*keff_factor(y, cancel_keff=cancel_keff)*mp.power(sqrt_minus_over_plus_factor(y), n)*(y+n*(3+2*n*y))/(6*y*one_m_ysq(y))
 
 def chi(n, y):
     if (n == 0):
