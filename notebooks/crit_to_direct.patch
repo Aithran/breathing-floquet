@@ -1,0 +1,81 @@
+--- breathing_critical_floquet.py	2019-06-14 22:42:19.537586008 -0400
++++ breathing_direct_floquet.py	2019-06-14 16:37:38.792823906 -0400
+@@ -1,3 +1,4 @@
++import harm_lattice as h0
+ import drive_coefficients as dc
+ import numpy as np
+ from scipy import linalg as LA
+@@ -44,8 +45,8 @@
+     """
+     return h/(8.0 * sim_mass * spacing_um * spacing_um * um2)
+ 
+-def diagonalize_critical_floquet_system(trap_freq, lattice_depth, site_spacing_um,
+-                               gamma,
++def diagonalize_floquet_system(trap_freq, lattice_depth, site_spacing_um,
++                               drive_freq, gamma,
+                                n_sites, floquet_m_radius,
+                                sort=True):
+     """Build and diagonalize the Floquet problem for breathing lattice
+@@ -54,6 +55,7 @@
+     trap_freq: Harmonic trapping frequency, E/h (Hz) units
+     lattice_depth: Lattice depth parameter V_0 before a cos (not cos^2), E/h (Hz)
+     site_spacing_um: Lattice site spacing, in microns
++    drive_freq: Natural drive frequency, in (Hz)
+     gamma: Drive amplitude parameter, 0<gamma<1
+     n_sites: Number of sites to include in the lattice, should be odd
+     floquet_m_radius: Number of Floquet couplings to use, generates 2m+1 blocks
+@@ -64,22 +66,21 @@
+     Globals Accessed: sim_mass?
+     
+     Returns 3 tuple:
+-    drive:     critical drive frequency used
++    h0_states: eigenstates of time-averaged Hamiltonian/basis states for floquet Hamiltonian
+     evals:     eigenvalues of floquet Hamiltonian (possibly sorted, not modulus)
+     evecs:     eigenvectors of floquet Hamiltonian (possibly sorted)
+     """
+     # Compute needed coefficients
+     n_floquet = 2*floquet_m_radius + 1
+     lattice_tunneling = tunneling_J(lattice_depth, lattice_recoil_energy(site_spacing_um))
+-    jsq_scale = gen_jsq_coeffs(site_spacing_um, trap_freq, gamma, n_floquet)
++    jsq_scale = gen_jsq_coeffs(site_spacing_um, drive_freq, trap_freq, gamma, n_floquet)
+     h0_scale = dc.all_chis(dc.y(gamma))
+-    crit_drive = dc.crit_drive_freq(dc.y(gamma), trap_freq)
+     # Build up floquet problem
+     jsq_block = on_site_jsq(n_sites)
+     tun_block = tunneling_block(n_sites, lattice_tunneling)
+     floquet_h = build_floquet_jsq(jsq_block, floquet_m_radius, jsq_scale)
+     floquet_h = add_tunneling_blocks(floquet_h, floquet_m_radius, tun_block, h0_scale)
+-    floquet_h = add_floquet_diag(floquet_h, floquet_m_radius, crit_drive)
++    floquet_h = add_floquet_diag(floquet_h, floquet_m_radius, drive_freq)
+     # Some consistency checks, warn but do not stop.
+     if not np.allclose(floquet_h.T, floquet_h):
+         # More stringent, requires only real entries
+@@ -90,22 +91,23 @@
+     evals, evecs = LA.eigh(floquet_h) # Uses faster algo than eig(), guaranteed real evals too!
+     if sort:
+         sort_order = np.argsort(evals)
+-        return crit_drive, evals[sort_order], evecs[:, sort_order]
++        return evals[sort_order], evecs[:, sort_order]
+     else:
+-        return crit_drive, evals, evecs
++        return evals, evecs
+ 
+-def gen_jsq_coeffs(site_spacing_um, trap_freq, gamma, n_floquet):
++def gen_jsq_coeffs(site_spacing_um, drive_freq, trap_freq, gamma, n_floquet):
+     """Generate the j^2 operators prefactors for the driven system
+     
+     Inputs:
+     site_spacing_um: Site spacing, in microns
++    drive_freq:      Drive frequency, in Hz (Natural f, not omega)
+     trap_freq:       Harmonic trap frequency in Hz (Natural f, not omega)
+     gamma:           Drive amplitude
+     n_floquet:       number of Floquet couplings required"""
+     # In paper, prefactor is 1/2 m * a^2 * (ang freq ^2), since we're requiring nat. freq, need 4 pi^2
+     prefactor = 2.0 * np.pi * np.pi * sim_mass * um2 * site_spacing_um * site_spacing_um/h
+-    crit_xis = dc.n_crit_xis(n_floquet, dc.y(gamma))
+-    return (prefactor * trap_freq * trap_freq * crit_xis)
++    big_xis, small_xis = dc.n_both_xis(n_floquet, dc.y(gamma))
++    return prefactor * ((trap_freq * trap_freq * small_xis) - (drive_freq*drive_freq*big_xis))
+ 
+ def build_floquet_jsq(jsq_op, floquet_radius, coefs):
+     """Starts building floquet hamiltonian by tiling scaled j^2 operator

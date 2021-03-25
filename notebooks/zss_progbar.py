@@ -4,7 +4,9 @@ def log_progress(sequence, every=None, size=None, name='Items'):
 
     from datetime import datetime, timedelta
     start_time = datetime.now() 
-
+    
+    clip_thresh = timedelta(seconds=10)
+    
     is_iterator = False
     if size is None:
         try:
@@ -37,7 +39,10 @@ def log_progress(sequence, every=None, size=None, name='Items'):
             elapsed_time -= timedelta(microseconds=elapsed_time.microseconds)
             elapsed_per = (elapsed_time/(index-1)) if index>1 else timedelta()
             elapsed_per_raw = elapsed_per
-            elapsed_per -= timedelta(microseconds=elapsed_per.microseconds)
+            if elapsed_per > clip_thresh:
+                elapsed_per -= timedelta(microseconds=elapsed_per.microseconds)
+            else:
+                elapsed_per = '{:d}.{:03d} s'.format(elapsed_per.seconds, elapsed_per.microseconds//1000)
             if index == 1 or index % every == 0:
                 if is_iterator:
                     label.value = '{name}: {index} / ? ({elapsed}, {elapsed_per} per)'.format(
@@ -58,7 +63,7 @@ def log_progress(sequence, every=None, size=None, name='Items'):
                             elapsed_per=(elapsed_per if index>1 else "--"),
                             pred_time=(remaining if index>1 else "--")
                             )
-                yield record
+            yield record
     except:
         progress.bar_style = 'danger'
         raise
@@ -66,8 +71,11 @@ def log_progress(sequence, every=None, size=None, name='Items'):
         step_time = datetime.now()
         elapsed_time = (datetime.now() - start_time)
         elapsed_time -= timedelta(microseconds=elapsed_time.microseconds)
-        elapsed_per = (elapsed_time/(index-1)) if index>1 else timedelta()
-        elapsed_per -= timedelta(microseconds=elapsed_per.microseconds)
+        elapsed_per = (elapsed_time/(index)) if index>1 else timedelta()
+        if elapsed_per > clip_thresh:
+            elapsed_per -= timedelta(microseconds=elapsed_per.microseconds)
+        else:
+            elapsed_per = '{:d}.{:03d} s'.format(elapsed_per.seconds, elapsed_per.microseconds//1000)
         progress.bar_style = 'success'
         progress.value = index
         label.value = "{name}: {index} ({elapsed}, {elapsed_per} per)".format(
